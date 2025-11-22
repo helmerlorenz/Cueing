@@ -82,7 +82,7 @@ class _GameConfirmationScreenState extends State<GameConfirmationScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                child: Text('TOTAL AMOUNT\n₱$amount', textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF6B00FF), fontSize: 18, fontWeight: FontWeight.bold, height: 1.5)),
+                child: Text('TOTAL PAYMENT\n₱$amount', textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF6B00FF), fontSize: 18, fontWeight: FontWeight.bold, height: 1.5)),
               ),
               const Spacer(),
               ElevatedButton(
@@ -93,7 +93,7 @@ class _GameConfirmationScreenState extends State<GameConfirmationScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text('Proceed to payment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text('Proceed to game queue', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
