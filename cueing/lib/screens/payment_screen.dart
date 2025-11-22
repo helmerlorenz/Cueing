@@ -47,7 +47,7 @@ class PaymentScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TimerScreen(hours: hours))),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TimerScreen(minutes: hours * 60))),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: const Color(0xFF6B00FF),

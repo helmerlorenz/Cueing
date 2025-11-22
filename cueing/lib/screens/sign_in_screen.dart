@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_screen.dart';
-import 'table_selection_screen.dart';
+import 'home_screen.dart';
 import '../services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -64,10 +64,10 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
     if (!mounted) return;
 
     if (result['success']) {
-      // Navigate to table selection
+      // Navigate to home (courts / queue / admin / profile)
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const TableSelectionScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
       // Show error message

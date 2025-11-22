@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class TimerScreen extends StatefulWidget {
-  final int hours;
-  const TimerScreen({super.key, required this.hours});
+  final int minutes;
+  const TimerScreen({super.key, required this.minutes});
 
   @override
   State<TimerScreen> createState() => _TimerScreenState();
@@ -17,7 +17,7 @@ class _TimerScreenState extends State<TimerScreen> {
   @override
   void initState() {
     super.initState();
-    _remainingSeconds = widget.hours * 3600;
+    _remainingSeconds = widget.minutes * 60;
   }
 
   void _startTimer() {
@@ -36,6 +36,13 @@ class _TimerScreenState extends State<TimerScreen> {
   void _stopTimer() {
     _timer?.cancel();
     setState(() => _isRunning = false);
+  }
+
+  void _endEarly() {
+    _timer?.cancel();
+    setState(() => _isRunning = false);
+    // When the user ends early, pop back to home (or previous screen)
+    if (mounted) Navigator.pop(context);
   }
 
   String _formatTime() {
@@ -89,6 +96,17 @@ class _TimerScreenState extends State<TimerScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 child: Text(_isRunning ? 'STOP' : 'START', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: _endEarly,
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.red),
+                  foregroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('End Early', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),

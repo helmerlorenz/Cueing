@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 import 'screens/sign_in_screen.dart';
 import 'services/auth_service.dart';
 
+// NOTE: If you migrate to Firebase, update this `main` to initialize Firebase before
+// calling runApp. Example:
+//
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp();
+//   runApp(const BookingApp());
+// }
+
 void main() {
-  // Initialize the auth service
+  // Initialize the auth service (local prototype)
   AuthService();
   runApp(const BookingApp());
 }

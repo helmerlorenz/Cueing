@@ -224,3 +224,26 @@ class AuthService {
     }
   }
 }
+
+/*
+  NOTE FOR MIGRATION TO FIREBASE AUTH
+
+  The current AuthService is local and stores users in SharedPreferences. For multi-device,
+  production-ready auth, replace this with Firebase Authentication (`firebase_auth`).
+
+  Migration steps (high level):
+  1. Add `firebase_core` and `firebase_auth` to `pubspec.yaml` and run `flutter pub get`.
+  2. Initialize Firebase in `main.dart` (call `await Firebase.initializeApp()` before runApp).
+  3. Replace signUp/signIn/resetPassword implementations:
+     - signUp: create user with `FirebaseAuth.instance.createUserWithEmailAndPassword(...)`
+       and save any user profile fields in Firestore under `users/{uid}` if needed.
+     - signIn: use `FirebaseAuth.instance.signInWithEmailAndPassword(...)`.
+     - resetPassword: use `FirebaseAuth.instance.sendPasswordResetEmail(email: email)`.
+  4. Keep a small adapter layer so UI code depends on an interface rather than directly
+     on `firebase_auth`. This makes testing and local dev easier (you can keep the current
+     `AuthService` as a fallback).
+
+  Security note: do NOT store password hashes in SharedPreferences for production. Use Firebase
+  Authentication or other secure auth providers.
+
+*/

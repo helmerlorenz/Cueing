@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'table_selection_screen.dart';
+import 'home_screen.dart';
 import '../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -60,10 +60,10 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
           backgroundColor: Colors.green,
         ),
       );
-      // Navigate to table selection
+      // Navigate to home (courts / queue / admin / profile)
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const TableSelectionScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
