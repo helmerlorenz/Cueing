@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/sign_in_screen.dart';
 import 'services/auth_service.dart';
 
-// NOTE: If you migrate to Firebase, update this `main` to initialize Firebase before
-// calling runApp. Example:
-//
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   await Firebase.initializeApp();
-//   runApp(const BookingApp());
-// }
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
-  // Initialize the auth service (local prototype)
-  AuthService();
+  // Try to initialize Firebase. If Firebase is not configured for this project
+  // the initialization will throw; we catch the error and proceed using local
+  // prototype services. You should add your platform Firebase config (google-services.json
+  // / GoogleService-Info.plist) or generate `firebase_options.dart` via the
+  // FlutterFire CLI for a full integration.
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    // Initialize the auth service which will detect Firebase and switch to
+    // the Firebase-backed implementation.
+    AuthService();
+  } catch (e) {
+    // Fall back to local prototype services if Firebase init fails.
+    debugPrint('Firebase initialization failed or not configured: $e');
+    AuthService();
+  }
+
   runApp(const BookingApp());
 }
 
@@ -68,3 +77,5 @@ class BookingApp extends StatelessWidget {
     );
   }
 }
+
+// Firestore security rules are managed in the Firebase Console.

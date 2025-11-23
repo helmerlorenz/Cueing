@@ -14,6 +14,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _newPasswordController = TextEditingController();
   bool _isLoading = false;
   final _authService = AuthService();
+  bool _useFirebase = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _useFirebase = _authService.isUsingFirebase;
+  }
 
   @override
   void dispose() {
@@ -27,9 +34,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     setState(() => _isLoading = true);
 
+    // For Firebase-backed auth we only send a password-reset email. For local
+    // fallback we accept a new password and update the stored hash.
     final result = await _authService.resetPassword(
       email: _emailController.text.trim(),
-      newPassword: _newPasswordController.text,
+      newPassword: _useFirebase ? '' : _newPasswordController.text,
     );
 
     setState(() => _isLoading = false);
@@ -104,24 +113,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _newPasswordController,
-                    obscureText: true,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: 'New Password',
-                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF10B981)),
-                      filled: true,
-                      fillColor: const Color(0xFF1A1A1A),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      labelStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+                  if (!_useFirebase)
+                    TextFormField(
+                      controller: _newPasswordController,
+                      obscureText: true,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'New Password',
+                        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF10B981)),
+                        filled: true,
+                        fillColor: const Color(0xFF1A1A1A),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        labelStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Please enter a new password';
+                        if (value.length < 6) return 'Password must be at least 6 characters';
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter a new password';
-                      if (value.length < 6) return 'Password must be at least 6 characters';
-                      return null;
-                    },
-                  ),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _handleReset,
@@ -132,7 +142,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     child: _isLoading
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Reset Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        : Text(_useFirebase ? 'Send Reset Email' : 'Reset Password', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
