@@ -138,12 +138,12 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
                       const SizedBox(height: 60),
                       _buildAnimatedTextField(
                         controller: _usernameController,
-                        label: 'Username',
-                        icon: Icons.person_outline,
+                        label: 'Email',
+                        icon: Icons.email_outlined,
                         delay: 200,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your username';
+                            return 'Please enter your email';
                           }
                           return null;
                         },
