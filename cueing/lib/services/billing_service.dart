@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:firebase_core/firebase_core.dart' show Firebase;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
 class BillSession {
   final String id;
@@ -108,6 +109,27 @@ class BillingService {
   static const int TIME_INCREMENT_MINUTES = 30; // 30 minutes
   static const int GRACE_PERIOD_MINUTES = 5; // 5-minute grace period for overtime
 
+  /// Ensure Firebase user is authenticated (anonymous if needed)
+  Future<void> _ensureFirebaseAuth() async {
+    if (!_useFirestore) return;
+    
+    try {
+      var currentUser = fb_auth.FirebaseAuth.instance.currentUser;
+      
+      if (currentUser == null) {
+        debugPrint('BillingService: No Firebase user, signing in anonymously...');
+        final cred = await fb_auth.FirebaseAuth.instance.signInAnonymously();
+        currentUser = cred.user;
+        debugPrint('BillingService: Anonymous sign-in successful. UID: ${currentUser?.uid}');
+      } else {
+        debugPrint('BillingService: Firebase user already signed in. UID: ${currentUser.uid}');
+      }
+    } catch (e) {
+      debugPrint('BillingService: Error ensuring Firebase auth: $e');
+      rethrow;
+    }
+  }
+
   /// Calculate charge based on minutes
   int calculateCharge(int minutes) {
     if (minutes <= 0) return 0;
@@ -174,6 +196,9 @@ class BillingService {
 
     if (_useFirestore) {
       try {
+        // Ensure Firebase authentication before writing
+        await _ensureFirebaseAuth();
+        
         final session = BillSession(
           id: DateTime.now().microsecondsSinceEpoch.toString(),
           userId: userId,
@@ -239,6 +264,8 @@ class BillingService {
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     if (_useFirestore) {
+      await _ensureFirebaseAuth();
+      
       final snapshot = await FirebaseFirestore.instance
           .collection('billingSessions')
           .where('userId', isEqualTo: userId)
@@ -264,6 +291,8 @@ class BillingService {
     debugPrint('BillingService.getAllUnpaidSessions for userId: $userId');
     
     if (_useFirestore) {
+      await _ensureFirebaseAuth();
+      
       debugPrint('Querying Firestore for unpaid sessions...');
       final snapshot = await FirebaseFirestore.instance
           .collection('billingSessions')
@@ -311,6 +340,12 @@ class BillingService {
     
     if (_useFirestore) {
       debugPrint('Returning Firestore stream');
+      
+      // Ensure auth before streaming
+      _ensureFirebaseAuth().catchError((e) {
+        debugPrint('Error ensuring auth for stream: $e');
+      });
+      
       return FirebaseFirestore.instance
           .collection('billingSessions')
           .where('userId', isEqualTo: userId)
@@ -374,6 +409,8 @@ class BillingService {
     debugPrint('BillingService.markAsPaid: ${sessionIds.length} sessions for $userId');
     
     if (_useFirestore) {
+      await _ensureFirebaseAuth();
+      
       final batch = FirebaseFirestore.instance.batch();
       
       for (final id in sessionIds) {
@@ -416,6 +453,8 @@ class BillingService {
     debugPrint('BillingService.getAllUnpaidBillsByUser called');
     
     if (_useFirestore) {
+      await _ensureFirebaseAuth();
+      
       final snapshot = await FirebaseFirestore.instance
           .collection('billingSessions')
           .where('isPaid', isEqualTo: false)
@@ -452,6 +491,11 @@ class BillingService {
     debugPrint('BillingService.streamAllUnpaidBills called');
     
     if (_useFirestore) {
+      // Ensure auth before streaming
+      _ensureFirebaseAuth().catchError((e) {
+        debugPrint('Error ensuring auth for admin stream: $e');
+      });
+      
       return FirebaseFirestore.instance
           .collection('billingSessions')
           .where('isPaid', isEqualTo: false)

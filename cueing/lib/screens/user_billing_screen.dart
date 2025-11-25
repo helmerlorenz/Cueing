@@ -11,7 +11,11 @@ class UserBillingScreen extends StatefulWidget {
 
 class _UserBillingScreenState extends State<UserBillingScreen> {
   final _billingService = BillingService();
-  String _userId = 'guest';
+  String? _userId;
+  bool _isLoading = true;
+
+  // Local cache to persist sessions and avoid UI flicker
+  List<BillSession> _sessionsCache = [];
 
   @override
   void initState() {
@@ -21,7 +25,13 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
 
   Future<void> _loadUser() async {
     final user = await AuthService().getCurrentUser();
-    setState(() => _userId = user?.username ?? 'guest');
+    setState(() {
+      _userId = user?.username ?? 'guest';
+      _isLoading = false;
+    });
+
+    debugPrint('=== USER BILLING SCREEN ===');
+    debugPrint('Loaded userId: $_userId');
   }
 
   String _formatTime(DateTime time) {
@@ -41,25 +51,58 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
   }
 
   String _formatDate(DateTime date) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show loading until we have userId
+    if (_isLoading || _userId == null) {
+      return Scaffold(
+        body: SafeArea(
+          child: const Center(
+            child: CircularProgressIndicator(color: Color(0xFF10B981)),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
         child: StreamBuilder<List<BillSession>>(
-          stream: _billingService.streamUnpaidSessions(_userId),
+          stream: _billingService.streamUnpaidSessions(_userId!),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            debugPrint(
+                'StreamBuilder - connectionState: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, sessionCount: ${snapshot.data?.length ?? 0}');
+
+            // Update cache only if snapshot has data
+            if (snapshot.hasData) {
+              _sessionsCache = snapshot.data!;
+            }
+
+            final sessions = _sessionsCache;
+            final totalAmount = _billingService.calculateTotalUnpaid(sessions);
+
+            // Loading indicator
+            if (snapshot.connectionState == ConnectionState.waiting && sessions.isEmpty) {
               return const Center(
                 child: CircularProgressIndicator(color: Color(0xFF10B981)),
               );
             }
-
-            final sessions = snapshot.data ?? [];
-            final totalAmount = _billingService.calculateTotalUnpaid(sessions);
 
             return CustomScrollView(
               slivers: [

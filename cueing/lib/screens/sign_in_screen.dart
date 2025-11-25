@@ -48,37 +48,41 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
     
     _animationController.forward();
   }
+Future<void> _handleSignIn() async {
+  if (!_formKey.currentState!.validate()) return;
 
-  Future<void> _handleSignIn() async {
-    if (!_formKey.currentState!.validate()) return;
+  setState(() => _isLoading = true);
 
-    setState(() => _isLoading = true);
+  final result = await _authService.signIn(
+    username: _usernameController.text.trim(),
+    password: _passwordController.text,
+  );
 
-    final result = await _authService.signIn(
-      username: _usernameController.text.trim(),
-      password: _passwordController.text,
+  setState(() => _isLoading = false);
+
+  if (!mounted) return;
+
+  if (result['success']) {
+    // Verify Firebase user is actually signed in
+    debugPrint('Sign in successful, checking Firebase auth state...');
+    final user = await _authService.getCurrentUser();
+    debugPrint('Current user: ${user?.username}');
+    
+    // Navigate to home
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
     );
-
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-
-    if (result['success']) {
-      // Navigate to home (courts / queue / admin / profile)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    } else {
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message']),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+  } else {
+    // Show error message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result['message']),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
   @override
   void dispose() {
