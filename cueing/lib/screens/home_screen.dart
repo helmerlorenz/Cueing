@@ -1,21 +1,34 @@
 import 'package:flutter/material.dart';
 import 'court_selection_screen.dart';
 import 'queue_overview_screen.dart';
+import 'user_billing_screen.dart';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int initialTab;
+  
+  const HomeScreen({
+    super.key,
+    this.initialTab = 0,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialTab;
+  }
 
   final List<Widget> _pages = const [
     CourtSelectionScreen(),
     QueueOverviewScreen(),
+    UserBillingScreen(),
     ProfileScreen(),
   ];
 
@@ -27,14 +40,29 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.sports_tennis), label: 'Courts'),
-          BottomNavigationBarItem(icon: Icon(Icons.queue), label: 'Queue'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sports_tennis),
+            label: 'Courts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.queue),
+            label: 'Queue',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long),
+            label: 'Bills',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
         selectedItemColor: const Color(0xFF10B981),
         unselectedItemColor: Colors.white70,
         backgroundColor: Colors.black,
         type: BottomNavigationBarType.fixed,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
       ),
     );
   }
