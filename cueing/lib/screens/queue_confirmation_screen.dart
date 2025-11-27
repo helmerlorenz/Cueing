@@ -7,7 +7,11 @@ import 'timer_screen.dart';
 class QueueConfirmationScreen extends StatefulWidget {
   final String courtId;
   final int durationMinutes;
-  const QueueConfirmationScreen({super.key, this.courtId = 'Court 1', this.durationMinutes = 60});
+  const QueueConfirmationScreen({
+    super.key,
+    this.courtId = 'Court 1',
+    this.durationMinutes = 60,
+  });
 
   @override
   State<QueueConfirmationScreen> createState() => _QueueConfirmationScreenState();
@@ -37,8 +41,8 @@ class _QueueConfirmationScreenState extends State<QueueConfirmationScreen> {
     });
   }
 
-  void _join() {
-    final id = _queueService.joinQueue(widget.courtId, _userId);
+  Future<void> _join() async {
+    final id = await _queueService.joinQueue(widget.courtId, _userId);
     setState(() => _entryId = id);
 
     _positionSub?.cancel();
@@ -47,9 +51,9 @@ class _QueueConfirmationScreenState extends State<QueueConfirmationScreen> {
     });
   }
 
-  void _leave() {
+  Future<void> _leave() async {
     if (_entryId != null) {
-      _queueService.leaveQueue(widget.courtId, _entryId!);
+      await _queueService.leaveQueue(widget.courtId, _entryId!, userId: _userId);
       _positionSub?.cancel();
       setState(() {
         _entryId = null;
@@ -67,7 +71,6 @@ class _QueueConfirmationScreenState extends State<QueueConfirmationScreen> {
   @override
   Widget build(BuildContext context) {
     final ahead = _position <= 0 ? 0 : _position;
-    final queueLen = _queueService.queueLength(widget.courtId);
 
     return Scaffold(
       appBar: AppBar(
@@ -81,9 +84,15 @@ class _QueueConfirmationScreenState extends State<QueueConfirmationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('QUEUE STATUS', style: TextStyle(color: Color(0xFF10B981), fontSize: 14, fontWeight: FontWeight.bold)),
+              const Text(
+                'QUEUE STATUS',
+                style: TextStyle(color: Color(0xFF10B981), fontSize: 14, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
-              Text('You are in: ${widget.courtId}', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(
+                'You are in: ${widget.courtId}',
+                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               // Show selected play time and price summary
               Container(
@@ -92,25 +101,33 @@ class _QueueConfirmationScreenState extends State<QueueConfirmationScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('${widget.durationMinutes} min', style: const TextStyle(color: Color(0xFF6B00FF), fontWeight: FontWeight.bold)),
-                    Text('₱${(widget.durationMinutes ~/ 30) * 50}', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+                    Text('${widget.durationMinutes} min',
+                        style: const TextStyle(color: Color(0xFF6B00FF), fontWeight: FontWeight.bold)),
+                    Text('₱${(widget.durationMinutes ~/ 30) * 50}',
+                        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                child: Column(
-                  children: [
-                    Text('People ahead: $ahead', style: const TextStyle(color: Color(0xFF6B00FF), fontSize: 20, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text('Queue length: $queueLen', style: const TextStyle(color: Colors.black54)),
-                  ],
-                ),
+              FutureBuilder<int>(
+                future: _queueService.queueLength(widget.courtId),
+                builder: (context, snapshot) {
+                  final queueLen = snapshot.data ?? 0;
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    child: Column(
+                      children: [
+                        Text('People ahead: $ahead',
+                            style: const TextStyle(color: Color(0xFF6B00FF), fontSize: 20, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Text('Queue length: $queueLen', style: const TextStyle(color: Colors.black54)),
+                      ],
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 12),
-              // Existing button for joining or leaving the queue
               ElevatedButton(
                 onPressed: _entryId == null ? _join : _leave,
                 style: ElevatedButton.styleFrom(
@@ -118,29 +135,33 @@ class _QueueConfirmationScreenState extends State<QueueConfirmationScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: Text(_entryId == null ? 'Join Queue' : 'Leave Queue', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text(
+                  _entryId == null ? 'Join Queue' : 'Leave Queue',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ),
               const SizedBox(height: 12),
-              // Confirm button appears when it's the user's turn (position == 0)
               if (_entryId != null && _position == 0) ...[
                 ElevatedButton(
-                  onPressed: () {
-                    // remove user from queue and start timer
+                  onPressed: () async {
                     final id = _entryId!;
-                    _queueService.leaveQueue(widget.courtId, id);
+                    await _queueService.leaveQueue(widget.courtId, id, userId: _userId);
                     setState(() {
                       _entryId = null;
                       _position = -1;
                     });
-                    // Start timer using selected duration from the confirmation screen
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => TimerScreen(minutes: widget.durationMinutes)));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => TimerScreen(minutes: widget.durationMinutes)),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: const Text('Confirm - Start Game', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: const Text('Confirm - Start Game',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
               const SizedBox(height: 12),
