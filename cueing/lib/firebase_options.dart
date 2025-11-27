@@ -68,5 +68,14 @@ class DefaultFirebaseOptions {
     storageBucket: 'cueing-app-as.firebasestorage.app',
     measurementId: 'G-7RY9T439NL',
   );
-}
 
+  static const FirebaseOptions android = FirebaseOptions(
+  apiKey: 'YOUR_ANDROID_API_KEY',
+  appId: '1:305153665736:android:572868401cae1c193813fd',
+  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+  projectId: 'cueing-app-as',
+  storageBucket: 'cueing-app-as.appspot.com',
+  );
+
+
+}

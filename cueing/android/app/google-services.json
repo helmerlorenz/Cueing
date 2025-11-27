@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "305153665736",
+    "project_id": "cueing-app-as",
+    "storage_bucket": "cueing-app-as.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:305153665736:android:572868401cae1c193813fd",
+        "android_client_info": {
+          "package_name": "com.example.cueing"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_cTU7454qgqPgSBrvx484u0CQkEwFDWg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
