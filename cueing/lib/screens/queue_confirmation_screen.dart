@@ -7,9 +7,10 @@ import 'timer_screen.dart';
 class QueueConfirmationScreen extends StatefulWidget {
   final String courtId;
   final int durationMinutes;
+
   const QueueConfirmationScreen({
     super.key,
-    this.courtId = 'Court 1',
+    required this.courtId,   // ✅ required, no default
     this.durationMinutes = 60,
   });
 
@@ -152,7 +153,12 @@ class _QueueConfirmationScreenState extends State<QueueConfirmationScreen> {
                     });
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => TimerScreen(minutes: widget.durationMinutes)),
+                      MaterialPageRoute(
+                        builder: (_) => TimerScreen(
+                          minutes: widget.durationMinutes,
+                          courtId: widget.courtId,   // ✅ pass actual selected court
+                        ),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
