@@ -1,6 +1,5 @@
   import 'dart:convert';
   import 'dart:async';
-  import 'package:flutter/foundation.dart' show debugPrint;
   import 'package:shared_preferences/shared_preferences.dart';
   import 'package:crypto/crypto.dart';
   import 'package:firebase_core/firebase_core.dart' show Firebase;

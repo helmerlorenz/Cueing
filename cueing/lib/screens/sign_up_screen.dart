@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import 'admin_screen.dart'; // 👈 add this if you want an Admin screen
+import 'admin_screen.dart';
 import '../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -35,6 +35,66 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
     _animationController.forward();
   }
 
+  /// Terms & Conditions dialog
+  Future<void> _showTermsDialog(BuildContext context, String role) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // must choose
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Terms and Conditions',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const SingleChildScrollView(
+            child: Text(
+              'By using CUEING, you agree to:\n\n'
+              '1. Sessions must be booked responsibly.\n'
+              '2. Billing records must be settled promptly.\n'
+              '3. Administrators reserve the right to manage queues.\n'
+              '4. Misuse of the system may result in account suspension.\n\n'
+              'Please read carefully before proceeding.',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Decline'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('You must accept the terms to continue.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+              ),
+              child: const Text('Accept'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (role == 'admin') {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminScreen()),
+                  );
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -55,25 +115,16 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
     if (!mounted) return;
 
     if (result['success']) {
-      // Clear password field for security
       _controllers['password']!.clear();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message']), backgroundColor: Colors.green),
       );
 
-      // 👇 Fetch current user and navigate based on role
+      // Fetch current user and show Terms dialog before navigation
       final currentUser = await _authService.getCurrentUser();
-      if (currentUser?.role == 'admin') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const AdminScreen()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
+      if (currentUser != null) {
+        await _showTermsDialog(context, currentUser.role);
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -211,7 +262,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                         BoxShadow(
                           color: const Color(0xFF10B981).withOpacity(0.3),
                           blurRadius: 20,
-                          offset: const Offset(0, 8),
+                                                    offset: const Offset(0, 8),
                         ),
                       ],
                     ),
