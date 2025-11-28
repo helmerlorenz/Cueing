@@ -1,2 +1,2 @@
 # Cueing
-WebDevFinalProj
+AppDevFinalProj
