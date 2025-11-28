@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/billing_service.dart';
 import '../services/auth_service.dart';
+import 'payment_screen.dart'; // ✅ Import PaymentScreen
 
 class UserBillingScreen extends StatefulWidget {
   const UserBillingScreen({super.key});
@@ -52,25 +53,14 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
+      'Jan','Feb','Mar','Apr','May','Jun',
+      'Jul','Aug','Sep','Oct','Nov','Dec'
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   @override
   Widget build(BuildContext context) {
-    // Show loading until we have userId
     if (_isLoading || _userId == null) {
       return Scaffold(
         body: SafeArea(
@@ -86,10 +76,6 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
         child: StreamBuilder<List<BillSession>>(
           stream: _billingService.streamUnpaidSessions(_userId!),
           builder: (context, snapshot) {
-            debugPrint(
-                'StreamBuilder - connectionState: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, sessionCount: ${snapshot.data?.length ?? 0}');
-
-            // Update cache only if snapshot has data
             if (snapshot.hasData) {
               _sessionsCache = snapshot.data!;
             }
@@ -97,7 +83,6 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
             final sessions = _sessionsCache;
             final totalAmount = _billingService.calculateTotalUnpaid(sessions);
 
-            // Loading indicator
             if (snapshot.connectionState == ConnectionState.waiting && sessions.isEmpty) {
               return const Center(
                 child: CircularProgressIndicator(color: Color(0xFF10B981)),
@@ -226,11 +211,7 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.check_circle_outline,
-                            size: 80,
-                            color: Colors.grey[700],
-                          ),
+                          Icon(Icons.check_circle_outline, size: 80, color: Colors.grey[700]),
                           const SizedBox(height: 16),
                           Text(
                             'No Unpaid Bills',
@@ -266,10 +247,7 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
                     ),
                   ),
 
-                // Bottom padding
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 80),
-                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
             );
           },
@@ -287,10 +265,7 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF2D2D2D),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF2D2D2D), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,13 +309,13 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
             ),
           ),
 
-          // Session details
+                    // Session details
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Time
+                // Time row
                 Row(
                   children: [
                     Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
@@ -410,7 +385,11 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Icon(Icons.warning_amber_rounded, size: 14, color: Colors.orange[300]),
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 14,
+                            color: Colors.orange[300],
+                          ),
                         ],
                       ),
                       Text(
@@ -427,7 +406,7 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
 
                 const Divider(color: Color(0xFF2D2D2D), height: 24),
 
-                // Total
+                // Total + Proceed to Payment button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -448,6 +427,45 @@ class _UserBillingScreenState extends State<UserBillingScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PaymentScreen(
+                          sessionId: session.id,                 // ✅ pass Firestore doc ID
+                          userId: session.userId,                // ✅ pass userId
+                          table: session.courtId,
+                          hours: session.bookedMinutes ~/ 60,
+                          amount: session.totalAmount,
+                        ),
+                      ),
+                    );
+
+                    // ✅ If PaymentScreen returned true, show confirmation here
+                    if (result == true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Bill settled successfully!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Proceed to Payment',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),

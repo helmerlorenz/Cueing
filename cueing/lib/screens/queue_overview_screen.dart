@@ -100,7 +100,7 @@ class _QueueOverviewScreenState extends State<QueueOverviewScreen> {
                                 children: [
                                   if (inQueue) ...[
                                     StreamBuilder<int>(
-                                      stream: _queueService.streamPosition(c, entry!.id),
+                                      stream: _queueService.streamPosition(c, entry.id),
                                       builder: (context, snap) {
                                         final posVal = snap.data ?? -1;
                                         final ahead = posVal <= 0 ? 0 : posVal;
